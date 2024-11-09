@@ -1,0 +1,117 @@
+Test plan for each of the main components: line modification functions, undo/redo stack functionality, and file operations (load/save). 
+
+### 1. **Test Plan for Line Modification Functions**
+
+#### 1.1 **Test `edit_line` function**
+
+- **Test Case 1**: Edit a line within bounds.
+  - **Input**: `line_number = 2`, `new_text = "Edited text"`
+  - **Expected Output**: The line at index 2 should be replaced with `"Edited text"`.
+  
+- **Test Case 2**: Edit a line with index greater than `total_lines`.
+  - **Input**: `line_number = total_lines + 2`, `new_text = "Extended line"`
+  - **Expected Output**: `total_lines` should be increased, and the new line should be `"Extended line"`.
+
+- **Test Case 3**: Edit a line with empty text.
+  - **Input**: `line_number = 1`, `new_text = ""`
+  - **Expected Output**: The line at index 1 should be set to an empty string.
+
+#### 1.2 **Test `add_line` function**
+
+- **Test Case 1**: Add a line at the end of the text.
+  - **Input**: `line_number = total_lines`, `new_text = "New end line"`
+  - **Expected Output**: `total_lines` should increase by 1, and the new line should be `"New end line"`.
+
+- **Test Case 2**: Insert a line in the middle of the text.
+  - **Input**: `line_number = 2`, `new_text = "Inserted line"`
+  - **Expected Output**: The line at index 2 should be `"Inserted line"`, with the existing lines shifted down.
+
+- **Test Case 3**: Add a line at index greater than `total_lines`.
+  - **Input**: `line_number = total_lines + 2`, `new_text = "Out of bounds"`
+  - **Expected Output**: `total_lines` should increase accordingly, and the line should be inserted at the specified index.
+
+#### 1.3 **Test `delete_line` function**
+
+- **Test Case 1**: Delete a line within bounds.
+  - **Input**: `line_number = 1`
+  - **Expected Output**: The line at index 1 should be deleted, and `total_lines` should decrease by 1.
+
+- **Test Case 2**: Delete the last line.
+  - **Input**: `line_number = total_lines - 1`
+  - **Expected Output**: The last line should be deleted, and `total_lines` should decrease by 1.
+
+- **Test Case 3**: Delete a line out of bounds.
+  - **Input**: `line_number = total_lines + 1`
+  - **Expected Output**: No change in `total_lines`, and no lines should be deleted.
+
+---
+
+### 2. **Test Plan for Undo/Redo Stack Functionality**
+
+#### 2.1 **Test `push_undo` function**
+
+- **Test Case 1**: Push to undo stack when empty.
+  - **Input**: Current state of `text` and `total_lines`
+  - **Expected Output**: Undo stack contains the current state, `undo_top` increments by 1.
+
+- **Test Case 2**: Push to undo stack when full.
+  - **Setup**: Fill the undo stack to `MAX_STACK_SIZE`.
+  - **Input**: Additional push operation.
+  - **Expected Output**: The oldest entry is removed, new entry is added, and `undo_top` remains at `MAX_STACK_SIZE - 1`.
+
+#### 2.2 **Test `pop_undo` function**
+
+- **Test Case 1**: Pop from non-empty undo stack.
+  - **Setup**: Push at least one state onto the undo stack.
+  - **Input**: Call `pop_undo`.
+  - **Expected Output**: The previous state is restored to `text` and `total_lines`, `undo_top` decrements by 1.
+
+- **Test Case 2**: Pop from empty undo stack.
+  - **Input**: Call `pop_undo` with `undo_top` set to -1.
+  - **Expected Output**: No change to `text` or `total_lines`, and an indication of "Undo stack is empty."
+
+#### 2.3 **Test `redo` function**
+
+- **Test Case 1**: Redo after an undo.
+  - **Setup**: Perform an undo after a modification.
+  - **Input**: Call `redo`.
+  - **Expected Output**: The undone state is reapplied, `redo_top` decrements, and `undo_top` increments.
+
+- **Test Case 2**: Redo after a new action.
+  - **Setup**: Perform an undo, then add a new line.
+  - **Input**: Call `redo`.
+  - **Expected Output**: No state is redone, and the `redo stack` remains cleared.
+
+---
+
+### 3. **Test Plan for File Operations**
+
+#### 3.1 **Test `load_text` function**
+
+- **Test Case 1**: Load a valid file within size limits.
+  - **Input**: File with fewer than `MAX_LINES` lines and each line shorter than `MAX_LINE_LENGTH`.
+  - **Expected Output**: `text` contains file content, and `total_lines` matches the number of lines in the file.
+
+- **Test Case 2**: Load a file exceeding size limits.
+  - **Input**: File with more than `MAX_LINES` lines.
+  - **Expected Output**: Only `MAX_LINES` lines are loaded, and `total_lines` equals `MAX_LINES`.
+
+- **Test Case 3**: Load a nonexistent file.
+  - **Input**: Invalid filename.
+  - **Expected Output**: Error message indicating the file could not be opened, `text` remains unchanged, and `total_lines` is not updated.
+
+#### 3.2 **Test `save_text` function**
+
+- **Test Case 1**: Save a file with valid data.
+  - **Input**: Valid `text` data and `total_lines`.
+  - **Expected Output**: File is created or overwritten with `text` content, matching `total_lines`.
+
+- **Test Case 2**: Save to a read-only location.
+  - **Setup**: Specify a read-only directory or file.
+  - **Expected Output**: Error message indicating the file could not be saved, and no file is created or modified.
+
+#### 3.3 **Integration Test for Load/Save**
+
+- **Test Case 1**: Save and load back.
+  - **Setup**: Create a temporary file, save current `text` data, then load it back.
+  - **Expected Output**: Loaded `text` data should match the original saved `text` data, and `total_lines` should be consistent.
